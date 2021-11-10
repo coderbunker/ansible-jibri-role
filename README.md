@@ -29,6 +29,7 @@ Aucune dépendance à d'autres rôles Ansible.
 Example Playbook
 ----------------
 
+```
 - name: "Deployer un serveur Jibri via Docker Compose"
   hosts: 
     - all
@@ -48,6 +49,7 @@ Example Playbook
       become: yes
   roles:
     - ansible-jibri-role
+```
 
 License
 -------
