@@ -1,0 +1,14 @@
+---
+# defaults file for ansible-jibri-role
+
+version: "stable-5963"
+utilisateur_unix: "jibri943"
+repertoires_config: "['~/.jitsi-meet-cfg', '~/.jitsi-meet-cfg/jibri']"
+
+## Variables du fichier .env du projet docker-compose de Jibri
+fuseau_horaire: "UTC"
+port_https: "8443"
+jitsi_domaine: "jitsi.mondomaine.net"
+# Doivent être identiques à celles du serveur Jitsi
+jibri_xmpp_mdp: "SECRET_A_CHANGER_01"
+jibri_enregistreur_mdp: "SECRET_A_CHANGER_02"

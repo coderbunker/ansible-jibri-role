@@ -1,0 +1,68 @@
+---
+# tasks file for ansible-jibri-role
+
+- name: "Installer linux-modules-extra-gcp"
+  apt:
+    name: linux-modules-extra-gcp
+    state: present
+  become: yes
+
+- name: "Charger le module du noyau linux (sudo modprobe snd_aloop)"
+  modprobe:
+    name: snd_aloop
+    state: present
+  become: yes
+
+- name: "Ajouter l'utilisateur Unix qui exécutera docker/docker-compose"
+  user:
+    name: "{{ utilisateur_unix }}"
+    groups: docker
+    append: yes
+    shell: /bin/bash
+  become: yes
+
+- name: "Ajouter les répertoires de configuration nécessaires" 
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ repertoires_config }}"
+  become: yes
+  become_user: "{{ utilisateur_unix }}"
+ 
+ - name: "Copier tous les fichiers de config. de l'Aquarium et de Jitsi Meet"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ utilisateur_unix }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: "jibri.yml.j2", dest: "/home/{{ utilisateur_unix }}/docker-compose.yml", owner: "{{ utilisateur_unix }}", mode: "0644" }
+    - { src: "env.j2", dest: "/home/{{ utilisateur_unix }}/.env", owner: "{{ utilisateur_unix }}", mode: "0644" }
+    - { src: "alsa-loopback.conf.j2", dest: "/etc/modprobe.d/alsa-loopback.conf", owner: "root", mode: "0644" }
+    - { src: "modules.j2", dest: "/etc/modules", owner: "root", mode: "0644" }
+  become: yes
+
+- name: "Redémarrer les services via docker-compose"
+  docker_compose:
+    project_src: "/home/{{ utilisateur_unix }}"
+    state: present
+    scale:
+      jibri: 3
+    restarted: yes
+  become: yes
+  become_user: "{{ utilisateur_unix }}"
+
+- name: "Configuer les pépriph. audio virtuels et redémarrer"
+  shell: 
+    cmd: "{{ item }}"
+  args: 
+    chdir: /home/{{ utilisateur_unix }}
+    executable: /bin/bash
+  loop:
+    - docker exec -t jibri01_jibri_1 sed -i 's/Loopback/0/g' /home/jibri/.asoundrc
+    - docker exec -t jibri01_jibri_2 sed -i 's/Loopback/1/g' /home/jibri/.asoundrc
+    - docker exec -t jibri01_jibri_3 sed -i 's/Loopback/2/g' /home/jibri/.asoundrc
+    - docker restart jibri01_jibri_1 jibri01_jibri_2 jibri01_jibri_3
+  become: yes
+  become_user: "{{ utilisateur_unix }}"
