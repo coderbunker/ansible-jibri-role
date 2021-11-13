@@ -29,7 +29,7 @@
   become: yes
   become_user: "{{ utilisateur_unix }}"
  
- - name: "Copier tous les fichiers de config. de l'Aquarium et de Jitsi Meet"
+- name: "Copier tous les fichiers de config. de l'Aquarium et de Jitsi Meet"
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
